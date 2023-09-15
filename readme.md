@@ -14,4 +14,8 @@ const helios = new Helios(credentials); // create new instance
 
 const res = await helios.status();       // make sure to use await as we're dealing with promises
 console.log(res)                        // do something with the response
+
+todo:
+- when adding user check for duplicate names
+- add error handling
 ```
