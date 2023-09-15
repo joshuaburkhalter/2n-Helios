@@ -1,9 +1,9 @@
 // imports
 import axios, { AxiosInstance } from 'axios';
 import * as https from 'https';
-import * as dayjs from 'dayjs';
-import * as utc from 'dayjs/plugin/utc.js';
-import { logSub, logPull, fingerEnroll, fingerResult, userAccess, userDetails } from './helpers';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+import { logSub, logPull, fingerEnroll, fingerResult, userAccess, userDetails } from './helpers.js';
 
 // import configs
 dayjs.extend(utc);
@@ -35,7 +35,7 @@ class Helios {
         if (subSuccess) {
             const { pullSuccess, result } = await logPull(id, this.ax);
             if (pullSuccess) {
-                return result.events.map(e => {
+                return result.events.map((e: any) => {
                     return { name: e.params.name, date: dayjs.unix(e.utcTime).format('YYYY-MM-DD HH:mm')}
                 });
             }
@@ -63,8 +63,8 @@ class Helios {
     }
 
     switch = async (action='open', sw=1)=> {
-        let act: string;
-        let msg: string;
+        let act = '';
+        let msg = '';
         switch (action) {
             case 'lock':
                 act = 'release';
