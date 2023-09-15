@@ -2,12 +2,18 @@
   "name": "2n",
   "version": "1.0.0",
   "description": "2n client for Node",
-  "main": "index.js",
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
   "type": "module",
+  "files": ["lib/**/*"],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "prepare": "npm run build",
+    "version": "git add -A src",
+    "postversion": "git push && git push --tags"
   },
-  "author": "",
+  "author": "Joshua Burkhalter",
+  "keywords": ["2n", "Helios"],
   "license": "ISC",
   "dependencies": {
     "@types/node": "^20.6.1",
