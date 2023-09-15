@@ -1,6 +1,6 @@
-# 2n-helios client
+# 2n-helios-client
 
-`2n-helios` is a node-style API for interfacing with 2n door access control panels.
+`2n-helios-client` is a node-style API for interfacing with 2n door access control panels.
 
 To use:
 ```js
@@ -15,7 +15,4 @@ const helios = new Helios(credentials); // create new instance
 const res = await helios.status();       // make sure to use await as we're dealing with promises
 console.log(res)                        // do something with the response
 
-todo:
-- when adding user check for duplicate names
-- add error handling
 ```
