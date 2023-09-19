@@ -8,33 +8,34 @@ import { logSub, logPull, fingerEnroll, fingerResult, userAccess, userDetails } 
 // import configs
 dayjs.extend(utc);
 
-// class constructor and methods
-interface Helios {
-    ip: string,
-    user: string,
-    pass: string,
-    baseURL: string,
-    httpsAgent: https.Agent,
-    auth: {username: string, password: string},
-    ax: AxiosInstance
-}
-
 class Helios {
+    ip: string;
+    user: string;
+    pass: string;
+    #baseURL: string;
+    #httpsAgent: https.Agent;
+    #auth: {username: string, password: string};
+    #ax: AxiosInstance;
+
     constructor(params: {ip: string, user: string, pass: string}) {
         this.ip = params.ip || '127.0.0.1',
         this.user = params.user || 'admin',
         this.pass = params.pass || 'admin',
-        this.baseURL = `https://${this.ip}/api`,
-        this.httpsAgent = new https.Agent({rejectUnauthorized: false}),
-        this.auth = {username: this.user, password: this.pass},
-        this.ax = axios.create({auth: this.auth, httpsAgent: this.httpsAgent, baseURL: this.baseURL})
+        this.#baseURL = `https://${this.ip}/api`,
+        this.#httpsAgent = new https.Agent({rejectUnauthorized: false}),
+        this.#auth = {username: this.user, password: this.pass},
+        this.#ax = axios.create({auth: this.#auth, httpsAgent: this.#httpsAgent, baseURL: this.#baseURL})
+    }
+
+    test = ()=> {
+        console.log(this)
     }
 
     /** Gets a log of successful entries within the specified days. */
     log = async (days=7)=> {
-        const { subSuccess, id } = await logSub(days, this.ax);
+        const { subSuccess, id } = await logSub(days, this.#ax);
         if (subSuccess) {
-            const { pullSuccess, result } = await logPull(id, this.ax);
+            const { pullSuccess, result } = await logPull(id, this.#ax);
             if (pullSuccess) {
                 return result.events.map((e: any) => {
                     return { name: e.params.name, date: dayjs.unix(e.utcTime).format('YYYY-MM-DD HH:mm')}
@@ -45,7 +46,7 @@ class Helios {
 
     /** Gets the status of the specified entry switch. */
     status = async (sw=1)=> {
-        const { data } = await this.ax({ 
+        const { data } = await this.#ax({ 
             url: `/switch/status`,
             method: 'get',
             params: {
@@ -81,7 +82,7 @@ class Helios {
                 act = 'trigger';
                 msg = 'opened';
         };
-        const { data } = await this.ax({ 
+        const { data } = await this.#ax({ 
             url: `/switch/ctrl`,
             method: 'get',
             params: {
@@ -99,7 +100,7 @@ class Helios {
     getUsers = async ()=> {
         const formData = new FormData();
         formData.append('blob-json', JSON.stringify({fields:['name', 'access.pin']}))
-        const { data } = await this.ax({
+        const { data } = await this.#ax({
             method: 'post',
             url: '/dir/query',
             data: formData,
@@ -114,14 +115,14 @@ class Helios {
 
     /** Gets a specified user based on it's uuid. */
     getUser = async (id: string)=> {
-        const details = await userDetails(id, this.ax);
+        const details = await userDetails(id, this.#ax);
         return details;
     }
 
     removeUser = async (id: string)=> {
         const formData = new FormData();
         formData.append('blob-dir_new', JSON.stringify({users:[{uuid:id}]}));
-        const { data } = await this.ax({
+        const { data } = await this.#ax({
             method: 'put',
             url: '/dir/delete',
             data: formData,
@@ -137,7 +138,7 @@ class Helios {
 
     /** Updates a specified user's access pin or fingerprint. */
     updateUserAccess = async (id: string, params: {pin: number, fpt: string})=> {
-        const didUpdate = await userAccess(id, params, this.ax);
+        const didUpdate = await userAccess(id, params, this.#ax);
         if (didUpdate) {
             console.log('User access updated.')
             return true
@@ -148,7 +149,7 @@ class Helios {
     addUser = async (name: string, email: string, pin: number)=> {
         const formData = new FormData();
         formData.append('blob-dir_new', JSON.stringify({users:[{name, email, access:{pin}}]}));
-        const { data } = await this.ax({
+        const { data } = await this.#ax({
             method: 'put',
             url: '/dir/create',
             data: formData,
@@ -164,10 +165,10 @@ class Helios {
 
     /** Starts fingerprint enrollment and updates the specified user if successful. */
     enrollBio = async (id: string, finger=6, reader=2)=> {
-        const { session }  = await fingerEnroll(reader, this.ax);
+        const { session }  = await fingerEnroll(reader, this.#ax);
         if (session) {
             const intervalID = setInterval(async ()=> {
-                const { success, result } = await fingerResult(session, this.ax);
+                const { success, result } = await fingerResult(session, this.#ax);
                 if (!success) {
                     if (result === 12) {
                         clearInterval(intervalID);
@@ -177,11 +178,11 @@ class Helios {
                 } else if (success) {
                     clearInterval(intervalID);
                     let fingerprint = result + '#fid=' + finger;
-                    const details = await userDetails(id, this.ax);
+                    const details = await userDetails(id, this.#ax);
                     if (details.access.fpt) {
                         fingerprint = fingerprint + ';' + details.access.fpt
                     }
-                    const fingerUpdated = await userAccess(id, { fpt: fingerprint}, this.ax);
+                    const fingerUpdated = await userAccess(id, { fpt: fingerprint}, this.#ax);
                     if (fingerUpdated) {
                         console.log('Fingerprint added.')
                     } else {
